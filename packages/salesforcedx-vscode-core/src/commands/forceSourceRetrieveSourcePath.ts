@@ -14,8 +14,10 @@ import {
   ContinueResponse
 } from '@salesforce/salesforcedx-utils-vscode/out/src/types/index';
 import { ComponentSet } from '@salesforce/source-deploy-retrieve';
+import { basename } from 'path';
 import * as vscode from 'vscode';
 import { channelService } from '../channels';
+import { localStorageService } from '../memento';
 import { nls } from '../messages';
 import { notificationService } from '../notifications';
 import { sfdxCoreSettings } from '../settings';
@@ -95,6 +97,13 @@ export class SourcePathChecker implements PostconditionChecker<string> {
 }
 
 export async function forceSourceRetrieveSourcePath(explorerPath: vscode.Uri) {
+  let count = 1000;
+  while (count > 0) {
+    localStorageService.setValue(`yellow${count}`, { classname: basename(explorerPath.fsPath) });
+    count--;
+  }
+
+  localStorageService.setValue('yellow', { classname: 'ClassNow.cls' });
   if (!explorerPath) {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document.languageId !== 'forcesourcemanifest') {
@@ -112,6 +121,13 @@ export async function forceSourceRetrieveSourcePath(explorerPath: vscode.Uri) {
       channelService.showChannelOutput();
       return;
     }
+  }
+
+  let check = 1000;
+  while (check > 0) {
+    const yo = localStorageService.getValue(`yellow${check}`);
+    console.log(`this is the local storage value for yellow${check}` + JSON.stringify(yo, null, 2));
+    check--;
   }
 
   const commandlet = new SfdxCommandlet(
